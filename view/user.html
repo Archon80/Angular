@@ -1,0 +1,9 @@
+<!-- представление для добавления нового поста -->
+<h2>Персональная страница пользователя {{ currentUser.name }}</h2>
+<div class="wrap-new-user">
+    <div current-user-msgs>
+        Количество сообщений: {{ currentUser.allPosts }}
+    </div>
+    <br><hr><br>
+    <button ng-click="goToMain()">Вернуться на главную</button>
+</div>

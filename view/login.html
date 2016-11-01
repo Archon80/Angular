@@ -1,0 +1,49 @@
+<div ng-controller="loginCtrl">
+<!-- 	
+<h3>Страница авторизации</h3>
+<div>
+	<input placeholder="Имя" ng-model="username" />
+</div>
+<div>
+	<input placeholder="Пароль" type="password" ng-model="password" />
+</div>
+<button ng-click="loginSubmit()">Войти на сайт</button>
+ -->
+ 	<h2>Страница авторизации</h2>
+    <br>
+    <form name="loginForm" novalidate ng-submit="loginSubmit(newUser, loginForm.$valid)">
+        <div class="well" ng-cloak>
+            <div class="form-group">
+                <label for="">Имя:</label>
+                <input type="text" name="userName" class="form-control" ng-model="newUser.name" required />
+
+                <div class="error" ng-show="showError">
+                    {{ getError(loginForm.userName.$error) }}
+                </div>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="">Password:</label>
+                <input type="password" name="userPassword" class="form-control" ng-model="newUser.password" required />
+
+                <div class="error" ng-show="showError">
+                    {{ getError(loginForm.userPassword.$error) }}
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="well">
+            Message: {{ message }}
+            <br>
+            <span class="summary" ng-class="loginForm.$valid ? 'if-valid' : 'if-invalid' "> <!-- для этого спана прописан отдельный результирующий класс в стилях -->
+                Valid: {{ loginForm.$valid }}
+            </span>
+        </div>
+
+        <br>
+
+        <button type="submit">Войти на сайт</button>
+        <button ng-click="goToWelcome()">Обратно на стартовую страницу</button>
+    </form>
+
+</div>

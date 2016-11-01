@@ -1,0 +1,19 @@
+<!-- представление для добавления нового поста -->
+<h2>Добавление нового поста</h2>
+<div class="wrap-new-post">
+    <div new-form-value>
+        <label>Заголовок</label>
+        <input type="text" ng-model="currentPost.title">
+    </div>
+    <div new-form-value>
+        <label>Сообщение</label>
+        <textarea cols="30" rows="10" ng-model="currentPost.message"></textarea>
+    </div>
+    <div new-form-value>
+        <label>Теги</label>
+        <input type="text" ng-model="currentPost.tags"></textarea>
+    </div>
+    <br><hr><br>
+    <button ng-click="saveNewPost(currentPost, currentUser)">Отправить сообщение</button>
+    <button ng-click="goToMain()">Отмена</button>
+</div>

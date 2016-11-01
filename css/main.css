@@ -1,0 +1,114 @@
+
+
+body {
+    background-color: #ccc;
+}
+
+h2 {
+    color: #5BC1E3;
+    /*border: 1px solid red;*/
+    text-align: center;
+}
+a {
+    color: #5BC1E3;
+    text-decoration: none;
+}
+
+
+.wrap-one-post-buttons {
+    display: inline-block;
+}
+
+.one-comment-field {
+    padding-bottom: 15px;
+}
+
+/*
+    Формы проверки заполнения данных для регистрации и авторизации
+*/
+.hide {
+	display: none;
+}
+
+/* все элементы, с которыми не взаимодействовал пользователь */
+form .ng-pristine {
+    border: 1px dotted gray;
+}
+
+/* все элементы, с которыми пользователь взаимодействовал, но они не прошли валидацию */
+form input.ng-invalid.ng-dirty {
+    background-color: lightpink;
+}
+
+/* все элементы, которые прошли проверку после взаимодействия с пользователем */
+form input.ng-valid.ng-dirty {
+    background-color: lightgreen;
+}
+
+/* все неправильно заполненные поля email */
+form .ng-invalid-email { /* по аналогии: .ng-invalid-required; } */
+    color: red;
+}
+
+/*
+    Валидация происходит после каждого изменения в форме.
+    Два следующих правила используются для элемента span в конце формы
+*/
+span.summary.if-invalid {
+    color: red;
+    font-weight: bold;
+}
+span.summary.if-valid {
+    color: green;
+}
+
+/*  меню для отладки */
+.ext-wrap {
+    background-color: #fff;
+    /*border: 1px solid red;*/
+    width: 1000px;
+    margin: 0 auto;
+    /*height: 1200px;*/
+    padding: 30px;
+}
+
+.test-menu {
+    display: inline-block;
+    padding: 10px;
+    background-color: #5BC1E3;
+    margin-right: 50px;
+}
+    .test-menu a {
+        text-decoration: none;
+        color: #fff;
+    }
+
+/********************************** основная страница *****************************/
+.post-author {
+    margin-bottom: 10px;
+}
+    .post-author a {
+        color:#5BC1E3;
+        font: italic bold 20px Verdana;
+        margin-bottom: 15px;
+        text-decoration: none;
+    }
+
+.post-title {
+    padding-bottom: 8px;
+}
+    .post-title a, .comment-author {
+        font: 18px Verdana;
+        padding-bottom: 10px;
+        text-decoration: none;
+        color:#5BC1E3;
+    }
+
+.post-message, .comment-message {
+    padding-bottom: 8px;
+    font: 14px Verdana;
+    padding-bottom: 10px;
+}
+
+
+

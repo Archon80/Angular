@@ -1,0 +1,19 @@
+<h2>Редактирование поста</h2>
+<div class="wrap-edit-post">
+    <br>
+    <br>
+    <div edit-form-value>
+        <a href="#">{{ currentPost.name }}</a>  </div>
+    </div>
+    <div edit-form-value>
+        <label>Title</label>
+        <input type="text" ng-model="currentPost.title">
+    </div>
+    <div edit-form-value>
+        <label>Message</label>
+        <textarea name="" id="" cols="30" rows="10" ng-model="currentPost.message"></textarea>
+    </div>
+    <br><hr><br>
+    <button ng-click="saveEditPost(currentPost)">Сохранить изменения</button>
+    <button ng-click="goToMain()">Отмена</button>
+</div>

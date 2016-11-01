@@ -1,0 +1,79 @@
+<!-- регистрация пользователя -->
+<div class="wrap-sign" ng-controller="signCtrl">
+
+    <h2>Страница регистрации</h2>
+    <br>
+    <form name="signupForm" novalidate ng-submit="signupNewUser(newUser, signupForm.$valid)">  <!-- если поставить action, будет происходить перезагрузка страницы -->
+        <div class="well" ng-cloak>                                                          <!-- параметр signupForm.$valid передает состояние формы в контроллер -->
+            <div class="form-group">
+                <label for="">Name:</label>
+                <input type="text" name="userName" class="form-control" ng-model="newUser.name" required />
+
+                <!--  подсказки пользователю: что именно он сделал неправильно при заполнении имени -->
+                <div class="error" ng-show="showError">
+                    {{ getError(signupForm.userName.$error) }}
+                </div>
+            </div>
+
+            <br>
+
+            <div class="form-group">
+                <label for="">Email:</label>
+                <input type="email" name="userEmail" class="form-control" ng-model="newUser.email" required />
+
+                <div class="error" ng-show="showError">
+                    {{ getError(signupForm.userEmail.$error) }}
+                </div>
+            </div>
+
+            <br>
+
+            <div class="form-group">
+                <label for="">Password:</label>
+                <input type="password" name="userPassword" class="form-control" ng-model="newUser.password" required />
+
+                <div class="error" ng-show="showError">
+                    {{ getError(signupForm.userPassword.$error) }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="">Retype password:</label>
+                <input type="password" name="userPassword2" class="form-control" ng-model="newUser.password2" required />
+
+                <div class="error" ng-show="showError">
+                    {{ getError(signupForm.userPassword.$error) }}
+                </div>
+            </div>
+
+            <br>
+
+            <div class="form-chbx">
+                <label>
+                    <input name="agreed" type="checkbox" ng-model="newUser.agreed" required />
+                    Я прочитал правила поведения на блоге, и согласен с ними
+                </label>
+
+                <div class="error" ng-show="showError">
+                    {{ getError(signupForm.agreed.$error) }}
+                </div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <div class="well">
+            Message: {{ message }}
+            <br>
+            <span class="summary" ng-class="signupForm.$valid ? 'if-valid' : 'if-invalid' "> <!-- для этого спана прописан отдельный результирующий класс в стилях -->
+                Valid: {{ signupForm.$valid }}
+            </span>
+        </div>
+
+        <br>
+
+        <button type="submit">Зарегистрироваться</button>
+        <button ng-click="goToWelcome()">Обратно на стартовую страницу</button>
+    </form>
+</div>

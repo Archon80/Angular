@@ -1,0 +1,23 @@
+<h2>Базовая страница блога</h2>
+<div class="wrap-one-post" ng-repeat="post in posts">
+	
+    <br><hr><br>
+    
+    <div class="post-author">   <a href="" ng-click="showUser(post)">{{ post.name }} </a></div>
+    <div class="post-title">    <a href="" ng-click="showPost(post)">{{ post.title }}</a></div>
+    <div class="post-message">  {{ post.message }} </div>
+    <div class="wrap-one-post-buttons">
+        <div class="wrap-one-post-buttons" ng-if="compareUsersPosts(post)">
+        	<button class="one-post-buttons" ng-click="editPost(post)">Редактировать</button>
+    	</div>
+        <div class="wrap-one-post-buttons" ng-if="compareUsersPosts(post)">
+        	<button class="one-post-buttons" ng-click="deletePost(post)">Удалить</button>
+    	</div>
+    </div>
+</div>
+
+<br><hr><br>
+
+<div class="wrap-global-buttons" ng-if="isAuth()">
+    <button class="global-buttons" ng-click="addNewPost()">Добавить новое сообщение</button>
+</div>
