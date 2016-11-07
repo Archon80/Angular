@@ -1,19 +1,50 @@
 <!-- представление для добавления нового поста -->
+
+
+<!-- <h2>Добавление нового поста</h2>
+
+<div class="wrap-new-post">
+    
+    <form action="" name="addPostForm" ng-submit="saveNewPost(currentPost)">
+        <div new-form-value>
+            <label>Заголовок</label><br>
+            <input type="text" name="title" ng-model="currentPost.title">
+        </div>
+        <br>
+        <div new-form-value>
+            <label>Сообщение</label><br>
+            <textarea cols="30" name="message" rows="10" ng-model="currentPost.message"></textarea>
+        </div>
+        <div new-form-value>
+            <label>Теги</label><br>
+            <input type="text" name="tags" ng-model="currentPost.tags"></textarea>
+        </div>
+        <br><hr><br>
+        <button type="submit">Отправить сообщение</button>
+    </form>
+
+    <button ng-click="goToMain()">Отмена</button>
+</div> -->
+
+
+
 <h2>Добавление нового поста</h2>
+
 <div class="wrap-new-post">
     <div new-form-value>
-        <label>Заголовок</label>
+        <label>Заголовок</label><br>
         <input type="text" ng-model="currentPost.title">
     </div>
+    <br>
     <div new-form-value>
-        <label>Сообщение</label>
+        <label>Сообщение</label><br>
         <textarea cols="30" rows="10" ng-model="currentPost.message"></textarea>
     </div>
     <div new-form-value>
-        <label>Теги</label>
+        <label>Теги</label><br>
         <input type="text" ng-model="currentPost.tags"></textarea>
     </div>
     <br><hr><br>
-    <button ng-click="saveNewPost(currentPost, currentUser)">Отправить сообщение</button>
-    <button ng-click="goToMain()">Отмена</button>
+    <button ng-click="saveNewPost(currentPost)">Отправить сообщение</button>
+    <button ng-click="gotoMain()">Отмена</button>
 </div>

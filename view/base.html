@@ -6,6 +6,7 @@
     <div class="post-author">   <a href="" ng-click="showUser(post)">{{ post.name }} </a></div>
     <div class="post-title">    <a href="" ng-click="showPost(post)">{{ post.title }}</a></div>
     <div class="post-message">  {{ post.message }} </div>
+    <div class="post-tags">  {{ post.tags }} </div>
     <div class="wrap-one-post-buttons">
         <div class="wrap-one-post-buttons" ng-if="compareUsersPosts(post)">
         	<button class="one-post-buttons" ng-click="editPost(post)">Редактировать</button>

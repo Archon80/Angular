@@ -36,4 +36,30 @@ trait DB_connect {
 		print_r($value);
 		echo '</pre>';
 	}
+
+	public static function isAuth()
+	{
+		$db = self::db_connect();
+					
+		$q = "SELECT `current` FROM auth WHERE id > 0";
+		$query = $db->prepare($q);
+		$query->execute();
+		$res = $query->fetchAll();
+
+		return (count($res)) ? true : false;
+	}
+
+	public static function logoutUser()
+	{
+		$db = self::db_connect();
+					
+		$q = "DELETE FROM auth";
+		$query = $db->prepare($q);
+		
+		return $query->execute();
+	}
 }
+
+
+
+

@@ -1,46 +1,6 @@
 // создаем модуль приложения
 var app = angular.module("app", ["ngRoute"]);
 
-// роутинг приложения
-app.config(function($routeProvider) {
-    $routeProvider
-        .when("/welcome", {
-            templateUrl: "/app/view/welcome.html"
-        })
-        .when("/main", {
-            templateUrl: "/app/view/base.html"
-        })
-        .when("/sign", {
-            templateUrl: "/app/view/sign.html"
-        })
-        .when("/login", {
-            templateUrl: "/app/view/login.html"
-        })
-        .when("/show", {
-            templateUrl: "/app/view/show.html"
-        })
-        .when("/new", {
-            resolve: { "check": checkAuth },
-            templateUrl: "/app/view/new.html"
-        })
-        .when("/edit", {
-            resolve: { "check": checkAuth },
-            templateUrl: "/app/view/edit.html"
-        })
-        .when("/user", {
-            templateUrl: "/app/view/user.html"
-        })
-        .otherwise({
-            redirectTo: "/welcome"
-        });
-
-        function checkAuth($location, $rootScope) {
-            if(!localStorage.getItem("loggedID")) {
-                $location.path("/welcome");
-            }
-        }
-});
-
 // константы, используемые в приложении
 app.constant("serverURL", "./php/server.php");
 
@@ -66,270 +26,592 @@ app.factory("Tools", function() {
             if(error.email) {
                 return "Введите правильный email";
             }
+        },
+        // проверка авторизации
+        isAuth: function() {
+            if(localStorage.getItem("loggedID")) {
+                return true;
+            }
+        },
+        // проверка корректно введенной почты
+        isEmailValid: function(text) {
+            var re = /^[\w]{1}[\w-\.]*@[\w-]+\.[a-z]{2,4}$/i;
+            return (re.test(text)) ? true : false;
+        },
+        // оповещение пользователя о технической ошибке
+        techErrorAlert: function() {
+            alert("Произошла техническая ошибка. Обратитесь за помощью к специалисту.");
         }
     }
 });
 
-// контроллер приветствия пользователя на главной странице
-app.controller("startCtrl", function($scope, $location) {
-    
-    $scope.goToSignupPage = function() {
-        $location.path("/sign");
-    }
-
-    $scope.goToLoginPage = function() {
-        $location.path("/login");
+// операции, связанные с переходами между "страницами"
+app.factory("Nav", function() {
+    return {
+        gotoMain: function($scope, $location) {
+            $scope.currentPost = {};
+            $scope.currentUser = {};
+            $scope.showAllPosts();
+            $location.path("/main");
+        },
+        gotoShow: function($scope, $location) {
+            $location.path("/show");
+        },
+        gotoNew: function($scope, $location) {
+            $location.path("/new");
+        },
+        gotoEdit: function($scope, $location) {
+            $location.path("/edit");
+        },
+        gotoUser: function($scope, $location) {
+            $location.path("/user");
+        },
+        gotoWelcome: function($scope, $location) {
+            $location.path("/welcome");
+        }        
     }
 });
 
-// контроллер регистрации пользователя
-app.controller("signCtrl", function($scope, $http, $rootScope, serverURL, $location, Tools) {
-    
-    $scope.getError = Tools.getError;
-
-    $scope.signupNewUser = function (newUser, isValid) {
-        
-        // проверка корректности заполнения формы
-        if(!isValid) {
-            $scope.message = "Error";
-            $scope.showError = true; // активация данного параметра запускает функцию getError
-            return;
+// операции, связанные с текущим пользователем
+app.factory("Users", function() {
+    return {
+        // сравнение идентификаторов текущего авторизированного юзера, и юзера, который написал данный пост
+        compareUsersPosts: function(post) {
+            if(post.id_user == localStorage.getItem("loggedID")) {
+                return true;            
+            }
+        },
+        // показ, кто сейчас на сайте
+        userOnline:  function () {
+            return localStorage.getItem("loggedName");
+        },
+        // получение данных текущего зарегистрированного юзера
+        getCurrentUserData: function(cnt) {
+            switch(cnt) {
+                case "id"  : return localStorage.getItem("loggedID");
+                case "name": return localStorage.getItem("loggedName");
+                default:     return false;
+            }
         }
+    }
+});
 
-        // проверка совпадения паролей
-        if(newUser.password !== newUser.password2) {
-            signupForm.userPassword2.value == '';
-            alert("Введенные пароли не совпадают. Попробуйте еще раз.");
-            return;
-        }
+// операции, связанные с проверками данных
+app.factory("Check", function() {
+    return {
+        // проверка на объект
+        isPost: function(post, Tools) {
+            if(typeof post !== 'object') {
+                Tools.techErrorAlert();
+                console.log('Из формы от пользователя пришел не объект.');
+                
+                return false;
+            }
+            return true;
+        },
+        // проверяем заголовок поста от клиента
+        titleFromClient: function(post) {
+            if( !post["title"] ) {
+                alert("Необходимо заполнить поле 'Заголовок'.");
+                return false;
+            }
+            else if(post.title.length < 2) {
+                alert("Слишком короткое имя. Длина заголовка должна быть не менее двух символов");
+                return false;
+            }
+            else if(post.title.length > 100) {
+                alert("Слишком короткое имя. Длина заголовка должна быть не более 100 символов");
+                return false;
+            }
 
-        var dataToServer = {
-            operation: "signNewUser",
-            data: newUser
-        };
-        $http
-            .post(serverURL, dataToServer)
-            .success(function(res) {
-                console.log("Результат регистрации: ", res);// id добавленного пользователя
+            return true;
+        },
+        // проверяем сообщение поста от клиента
+        messageFromClient: function(post) {
+            console.log('post.message.length = ', post.message.length);
+            // проверяем тело поста
+            if( !post["message"] ) {
+                alert("Необходимо заполнить поле 'Сообщение'.");
+                return false;
+            }
+            else if(post.message.length < 2) {
+                alert("Слишком короткое сообщение. Длина сообщения должна быть не менее двух символов");
+                return false;
+            }
+            else if(post.message.length > 1000) {
+                
+                alert("Слишком длинное сообщение. Длина сообщения должна быть не более 1000 символов");
+                return false;
+            }
 
-                if(res["success"]) {
-                    alert("Регистрация прошла успешно!");
-                    $location.path("/login");
-                } else {
-                    // объясняем пользователю причины ошибки регистрации (уже существует логин или почта)
-                    if(res['body']) {
-                        alert(res['body']);
-                    }
-                    // выводим в консоль информацию для разработчиков
-                    if(res['error']) {
-                        console.log(res['error']);
-                    }
+            return true;
+        },
+        // проверяем теги поста от клиента
+        tagsFromClient: function(post) {
+            // обрабатываем теги
+            if( !post["tags"]) {
+                post["tags"] = "";
+                return true;
+            }
+            else {
+                if(post.tags.length < 2) {
+                    alert("Слишком короткий тег. Длина тегов должна быть не менее двух символов");
+                    return false;
                 }
-            });
-    }
+                if(post.tags.length > 50) {
+                    alert("Слишком длинная строка тегов. Длина тегов должна быть не более 50 символов");
+                    return false;
+                }
+            }
+            return true;
+        },
+        // проверяем, валидный ли объект пришел с сервера
+        dataFromServer:function (res, Tools) {
+            if(typeof res !== 'object') {
+                console.log('С сервера пришел не объект.', res);
+                Tools.techErrorAlert();
+                return false;
+            }
+            if( res["status"] === 'undefined' ) {
+                console.log('У объекта, который пришел с сервера, нет поля "status".', res);
+                Tools.techErrorAlert();
+                return false;
+            }
+            if( res["data"] === 'undefined' ) {
+                console.log('У объекта, который пришел с сервера, нет поля "data".', res);
+                Tools.techErrorAlert();
+                return false;
+            }
 
-    $scope.message = "Ready";  
-});
-
-// контроллер авторизации пользователя
-app.controller("loginCtrl", function($scope, $http, $rootScope, serverURL, $location, Tools) {
-    
-    $scope.getError = Tools.getError;
-
-    $scope.loginSubmit = function(newUser, isValid) {
-        if(!isValid) {
-            $scope.message = "Error";
-            $scope.showError = true;
-            return;
+            return true;
         }
 
-        var dataToServer = {
-            operation: "loginUser",
-            data: newUser
-        };
-        $http
-            .post(serverURL, dataToServer)
-            .success(function(res) {
-                if(res["success"]) {
-                    localStorage.setItem('loggedID', res["body"][0]['id_user']);
-                    localStorage.setItem('loggedName', res["body"][0]['name']);
-                    $location.path("/main");
-                } else {
-                    if(res['error']) {
-                        console.log(res['error']);
-                    }
-                    alert('Неверный логин или пароль. Попробуйте еще раз.');
-                }
-            });
     }
+});
 
-    $scope.goToWelcome = function() {
-        $location.path("/welcome");
+// операции, связанные с текущим пользователем
+app.factory("Storage", function() {
+    return {
+        uSet: function(obj, name) {
+            localStorage.setItem(name, JSON.stringify(obj));
+        },
+        uGet: function(name) {
+            return JSON.parse(localStorage.getItem(name));
+        },
+        uDel: function() {
+            localStorage.removeItem(name);
+            return {};
+        }
     }
-
-    $scope.message = "Ready";
 });
 
 // базовый контроллер приложения
-app.controller("baseBlogCtrl", function($scope, $rootScope, $http, $routeParams, $location, serverURL){
+app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Tools, Nav, Users, Check, Storage){
 
-    // пользователь может редактировать и удалять только свои посты
-    $scope.compareUsersPosts = function(post) {
-        if(post.id_user == localStorage.getItem("loggedID")) {
-            return true;            
-        }
-    }
-
-    // для отладки (в верхнем отладочном меню): узнать, авторизирован ли сейчас пользователь
-    $scope.tttest = function () {
-        return localStorage.getItem("loggedName");
-    }
-
-    $scope.currentPost = {};
+    // навигация
+    $scope.gotoMain   = function() { Nav.gotoMain($scope, $location); }                 // отмена изменений и возврат в представление basePage
     
-    $scope.allComments = {};
+    // работа с текущим пользователем
+    $scope.userOnline = function() { return Users.userOnline(); }                       // показ, кто сейчас онлайн на сайте
+    $scope.compareUsersPosts = function(post) { return Users.compareUsersPosts(post); } // сравнение идентификаторов текущего авторизированного юзера, и юзера, который написал данный пост
+
+
+    // переменные контроллера
+    $scope.currentPost = Storage.uDel('currentPost');
+    $scope.allComments = Storage.uDel('allComments');
     $scope.currentComment = {};
 
-    $scope.allUsers = {};
+    // $scope.allUsers = {};
     $scope.currentUser = {};
-
-    // отмена изменений и возврат в представление basePage
-    $scope.goToMain = function() {
-        $scope.currentPost = {};
-        $scope.currentUser = {};
-
-        $location.path("/main");
-    }
 
     // получение всех постов из таблицы
     $scope.showAllPosts = function() {
-        var dataToServer = {
-            operation: "getAllPosts"
-        };
         $http
-            .post(serverURL, dataToServer)
-            .success(function(result) {
-                console.log('allЗosts = ', result);
-                $scope.posts = result;
+            .post(serverURL, {
+                operation: "getAllPosts"
+            })
+            .success(function(res) {
+                console.log('Все сообщения: ', res);//return;
+                $scope.posts = res;
             });
     }
 
     // показываем текущий пост
     $scope.showPost = function(post) {
-        console.log("Текущий пост R: ", post.id_post)
-        var dataToServer = {
-            operation: "getAllComments",
-            data: post.id_post
-        };
+        if(!post.id_post) {
+            alert("В данный момент невозможно просмотреть отдельный пост. Эта техническая проблема в скором времени будет устранена.");
+            console.log("Не был получен идентификатор текущего поста. Поэтому не будет выполнен запрос, и просмотр текущего поста невозможен.");
+            return;
+        }
 
         $http
-            .post(serverURL, dataToServer)
+            .post(serverURL, {
+                operation: "getPost",
+                data: post.id_post
+            })
             .success(function(res) {
-                // сохраняем ВСЕ комментарии к текущему посту - для последующего вывода на странице
-                console.log('Получили все комментарии из функции showPost: ', res);
-                $scope.allComments = res;
-                $scope.showAllComments(post);
 
-                // сохраняем ТЕКУЩИЙ пост - для последующего вывода на странице
-                $scope.currentPost = post;
-                console.log("Показываемый пост - ", post);
-                $location.path("/show");
-            });
-    }
+                if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
 
-    // обновляем все комментарии на странице
-    $scope.showAllComments = function(post) {
-        var dataToServer = {
-            operation: "getAllComments",
-            data: post.id_post
-        };
-        $http
-            .post(serverURL, dataToServer)
-            .success(function(res) {
-                console.log("Все комментарии - ", res);
-                $scope.allComments = res;
-            });
-    }
+                // проверить res.data.message
+                if(!res.data.message) {
+                    Tools.techErrorAlert();
+                    console.log('В объекте, который пришел с сервера, пустое поле message');
+                }
+
+                if(res["status"] == 'ok') {
+                    post["message"] = res.data.message;
+
+                    $scope.currentPost = post;// $scope.currentPost = angular.copy(post);
+                    Storage.uSet(post, 'currentPost');
+                    
+                    $scope.getAllComments(post.id_post);
+                    Nav.gotoShow($scope, $location);                    
+                }
+                else {
+                    if(res["status"] === 'no_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
+    } // showPost
+
 
     // добавление нового поста
-    $scope.addNewPost = function(post) {
+    $scope.addNewPost = function() {
         $scope.currentPost = {};
-        $location.path("/new");
+        Nav.gotoNew($scope, $location);
     }
     // сохранение нового элемента
-    $scope.saveNewPost = function(post, currentUser) {
-        var dataToServer = {
-            operation: "addPost",
-            data: {
-                post: post,
-                id_user: localStorage.getItem("loggedID")
-            }
-        };
+    $scope.saveNewPost = function(post) {
+        // console.log("Добавление поста: ", post); //return;
+
+        if( !Check.isPost(post, Tools) )    { return; };   // проверка входного параметра от клиента
+        if( !Check.titleFromClient(post) )  { return; };   // проверка валидности заполнения поля title
+        if( !Check.messageFromClient(post) ){ return; };   // проверка валидности заполнения поля message
+        if( !Check.tagsFromClient(post) )   { return; };   // проверка валидности заполнения поля tags
 
         $http
-            .post(serverURL, dataToServer)
+            .post(serverURL, {
+                operation: "addPost",
+                data: {
+                    post: post,
+                    id_user: Users.getCurrentUserData("id")
+                }
+            })
             .success(function(res) {
-                console.log("Добавление нового поста = ", res);
-                $scope.showAllPosts();
-                $location.path("/main");
-            });
-    }
+                if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
+
+                // если пост был успешно добавлен
+                if(res["status"] == 'ok') {
+                    // console.log("Добавление нового поста = ", res); alert(1); return;
+                    console.log("Добавление нового поста = ", res);
+                    $scope.showAllPosts();
+                    
+                    Nav.gotoMain($scope, $location);
+                }
+                // если нет
+                else {
+                    // проблемы с передачей параметра на сервер
+                    if(res["status"] === 'no_data') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_array') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_auth') {
+                        alert(res["data"]);
+                    }
+                    // заголовок
+                    else if(res["status"] === 'no_title') {
+                        alert("Необходимо заполнить поле 'Заголовок'.")
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_title') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_title') {
+                        alert(res["data"]);
+                    }
+                    // тело поста
+                    else if(res["status"] === 'no_message') {
+                        alert("Необходимо заполнить поле 'Сообщение'.")
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_message') {
+                        alert(res["data"]);
+                    }
+                    // теги
+                    else if(res["status"] === 'too_short_tags') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_tags') {
+                        alert(res["data"]);
+                    }
+                    // идентификатор пользователя
+                    else if(res["status"] === 'no_id_user') {
+                        Tools.techErrorAlert();
+                    }
+                    // ошибка подключения к БД
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    // обработка неожиданного и теоретически невозможного варианта
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+
+                } // if
+                
+            }); // $http
+    
+    } // saveNewPost
 
 
     // клик по кнопке "Редактировать сообщение"
     $scope.editPost = function(post) {
-        $scope.currentPost = angular.copy(post);
-        $location.path("/edit");
-    }
+        if(!post.id_post) {
+            alert("В данный момент невозможно отредактировать отдельный пост. Эта техническая проблема в скором времени будет устранена.");
+            console.log("Не был получен идентификатор текущего поста. Поэтому не будет выполнен запрос, и просмотр текущего поста невозможен.");
+            return;
+        }
+
+        $http
+            .post(serverURL, {
+                operation: "getPost",
+                data: post.id_post
+            })
+            .success(function(res) {
+
+                if( !Check.dataFromServer(res, Tools) ) { return; };
+
+                if(!res.data.message) {
+                    Tools.techErrorAlert();
+                    console.log('В объекте, который пришел с сервера, пустое поле message');
+                }
+
+                if(res["status"] == 'ok') {
+                    post["message"] = res.data.message;
+                    $scope.currentPost = post;// $scope.currentPost = angular.copy(post);
+                    
+                    Nav.gotoEdit($scope, $location);
+                }
+                else {
+                    if(res["status"] === 'no_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
+    } // editPost
+
     // клик по кнопке "Сохранить изменения"
     $scope.saveEditPost = function(post) {
-        var dataToServer = {
-            operation: "editPost",
-            data: post
-        };
-        $http
-            .post(serverURL, dataToServer)
-            .success(function(res) {
-                $scope.showAllPosts();
-                $location.path("/main");
-            });
-    }
 
-    // удаление элемента из модели
+        if( !Check.isPost(post, Tools) )    { return; };
+        if( !Check.titleFromClient(post) )  { return; };
+        if( !Check.messageFromClient(post) ){ return; };
+        if( !Check.tagsFromClient(post) )   { return; };
+
+        $http
+            .post(serverURL, {
+                operation: "editPost",
+                data: post
+            })
+            .success(function(res) {
+                if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
+
+                if(res["status"] == 'ok') {
+                    console.log("Редактирование нового поста = ", res);
+                    $scope.showAllPosts();
+                    Nav.gotoMain($scope, $location);
+                }
+                else {
+                    if(res["status"] === 'no_data') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_array') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_auth') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_title') {
+                        alert("Необходимо заполнить поле 'Заголовок'.")
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_title') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_title') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_message') {
+                        alert("Необходимо заполнить поле 'Сообщение'.")
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_tags') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_tags') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
+    } // saveEditPost
+
+    // удаление поста
     $scope.deletePost = function(post) {
-        var dataToServer = {
-            operation: "deletePost",
-            data: post.id_post
-        };
+        if(typeof post !== 'object') {
+            Tools.techErrorAlert();
+            console.log('Удаление поста. Из формы от пользователя пришел не объект.');
+            return;
+        }
+        if( !post["id_post"] ) {
+            Tools.techErrorAlert();
+            console.log('Удаление поста. Из формы от пользователя пришел объект, у которого нет поля id_post.');
+            return;
+        }
+
         $http
-            .post(serverURL, dataToServer)
+            .post(serverURL, {
+                operation: "deletePost",
+                data: post.id_post
+            })
             .success(function(res) {
-                console.log('deletePost = ', res);
-                $scope.showAllPosts();
-            });
+                console.log("Ответ сервера при удалении поста: ", res);
+
+                if( !Check.dataFromServer(res, Tools) ) { return; };
+
+                if(res["status"] == 'ok') {
+                    $scope.showAllPosts();
+                }
+                else {
+                    if(res["status"] === 'no_data') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_array') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_auth') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
+    } // deletePost
+
+
+    // обновляем все комментарии на странице
+    $scope.getAllComments = function(id_post) {
+        console.log('Начало работы функции getAllComments: ', id_post);
+        $http
+            .post(serverURL, {
+                operation: "getAllComments",
+                data: id_post
+            })
+            .success(function(res) {
+                if( !Check.dataFromServer(res, Tools) ) { return; };
+
+                if(res["status"] == 'ok') {
+                    $scope.allComments = res.data;
+                    Storage.uSet(res.data, 'allComments');
+                }
+                else {
+                    if(res["status"] === 'no_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
     }
 
-    $scope.getAllUsers = function() {
-        var dataToServer = {
-            operation: "getAllUsers"
-        };
-        $http
-            .post(serverURL, dataToServer)
-            .success(function(res) {
-                console.log("Все пользователи: ", res);
-                $scope.allUsers = res;
-            });
-    };
+    $scope.getCurrentPost = function() {
+        $scope.currentPost = Storage.uGet('currentPost');
+    }
+    $scope.refreshAllComments = function() {
+        $scope.allComments = Storage.uGet('allComments');
+        // return Storage.uGet('allComments');
+    }
+    $scope.checkAllComments = function() {
+        if(Storage.uGet('currentPost')) {
+            return true;
+        }
+    }
 
     $scope.showAllPosts();
-    $scope.getAllUsers();
 });
 
 
 /*
     работа с комментариями
 */
-app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, serverURL, $rootScope, Tools) {
+app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, serverURL, Tools, Check, Nav) {
     
     $scope.getError = Tools.getError;
 
@@ -341,56 +623,185 @@ app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, 
     }
 
     // сохранение комментария
-    $scope.addComment = function(currentComment, isValid) {
+    $scope.addComment = function(addedComment, id_post, isValid) {
         if(!isValid) {
             $scope.message = "Error";
             $scope.showError = true;// активация данного параметра запускает функцию getError
             return;
         }
-
-        // готовим данные к отправке на сервер
-        var dataToServer = {
-            operation: "addComment",
-            data: {
-                comment : currentComment,
-                id_post : $scope.currentPost.id_post
-            }
-        };
+        if(typeof addedComment !== 'object') {
+            Tools.techErrorAlert();
+            console.log('Из формы от пользователя пришел не объект.');
+            return false;
+        }
+        // проверяем id_post
+        if(!id_post) {
+            Tools.techErrorAlert();
+            console.log('В функцию addComment из формы от пользователя не пришел айдишник поста.');
+            return false;
+        }
+        if(typeof id_post !== 'string') {
+            Tools.techErrorAlert();
+            console.log('Из формы от пользователя в качестве идентификатора комментария пришла не строка (возможно, это объект).');
+            return false;
+        }
+        // проверяем поле "автор"
+        if( !addedComment["author"] ) {
+            alert("Необходимо заполнить поле 'Автор'.");
+            return false;
+        }
+        else if(addedComment.author.length < 2) {
+            alert("Слишком короткое имя автора. Длина имени автора должна быть не менее двух символов");
+            return false;
+        }
+        else if(addedComment.author.length > 30) {
+            alert("Слишком короткое имя автора. Длина имени автора должна быть не более 30 символов");
+            return false;
+        }
+        // проверяем поле "почта"
+        if(!Tools.isEmailValid(addedComment.email)) {
+            alert("Некорректный почтовый адрес.");
+            return false;
+        }
+        else if(addedComment.email.length > 30) {
+            alert("Слишком длинный почтовый адрес. Длина почтового адреса должна быть не более 30 символов");
+            return false;
+        }
+        // проверяем поле "сообщение"
+        if( !addedComment["message"] ) {
+            alert("Необходимо заполнить поле 'Сообщение'.");
+            return false;
+        }
+        else if(addedComment.message.length < 2) {
+            alert("Слишком короткое сообщение. Длина сообщения должна быть не менее двух символов");
+            return false;
+        }
+        else if(addedComment.message.length > 1000) {
+            alert("Слишком длинное сообщение. Длина сообщения должна быть не более 1000 символов");
+            return false;
+        }
 
         $http
-            .post(serverURL, dataToServer)
+            .post(serverURL, {
+                operation: "addComment",
+                data: {
+                    comment : addedComment,
+                    id_post : id_post
+                }
+            })
             .success(function(res) {
-                console.log('Сохранение комментария: ', res);
-                $scope.showAllComments($scope.currentPost);
-                Tools.clearComment(commentForm, currentComment);
-            });
+                if( !Check.dataFromServer(res, Tools) ) { return; };
+
+                if(res["status"] == 'ok') {
+                    console.log('Сохранение комментария: ', res);
+                    $scope.getAllComments(id_post);
+                    Tools.clearComment(commentForm, addedComment);
+
+                }
+                else {
+                    if(res["status"] === 'no_data') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_array') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_id_post' || res["status"] === 'no_string_type_of_id_post') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_author') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_author') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_author') {
+                        alert(res["data"]);
+                    }
+                    // почтовый адрес
+                    else if(res["status"] === 'no_email') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'not_valid_email') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_email') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_short_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'too_long_message') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
 
         $scope.message = "Ready";
-    }
+    } // addComment
 
     // УДАЛЕНИЕ комментария
-    $scope.deleteComment = function(comment) {
-        console.log('Удаляемый комментарий: ', comment);
-     
-        var dataToServer = {
-            operation: "deleteComment",
-            data: comment.id_comment
-        };
-
+    $scope.deleteComment = function(id_comment, id_post) {
         $http
-            .post(serverURL, dataToServer)
+            .post(serverURL, {
+                operation: "deleteComment",
+                data: id_comment
+            })
             .success(function(res) {
-                console.log('Результат удаления комментария: ', res);
-                $scope.showAllComments($scope.currentPost);
-            });
-    }
+                if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
+
+                if(res["status"] == 'ok') {
+                    $scope.getAllComments(id_post);
+                }
+                else {
+                    if(res["status"] === 'no_data') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_array') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'not_auth') {
+                        alert(res["data"]);
+                    }
+                    else if(res["status"] === 'no_id_comment') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else if(res["status"] === 'no_database_connect') {
+                        Tools.techErrorAlert();
+                        console.log(res["data"]);
+                    }
+                    else {
+                        Tools.techErrorAlert();
+                        console.log("С сервера пришел неизвестный статус: ", res["status"]);
+                    }
+                } // if
+            }); // $http
+    } // deleteComment
 });
 
 
 /*
     работа с пользователями
 */
-app.controller("usersCtrl", function($scope, $http, $routeParams, $location, serverURL, $rootScope) {
+app.controller("usersCtrl", function($scope, $http, $location, serverURL, Tools, Users, Nav) {
+
+    $scope.isAuth = Tools.isAuth;
 
     // показ юзера на отдельной странице
     $scope.showUser = function(post) {
@@ -405,24 +816,28 @@ app.controller("usersCtrl", function($scope, $http, $routeParams, $location, ser
                 $scope.currentUser.name = post.name;
                 $scope.currentUser.allPosts = res;
 
-                $location.path("/user");
+                Nav.gotoUser($scope, $location);
             });
     }
 
-    $scope.isAuth = function() {
-        if(localStorage.getItem("loggedID")) {
-            return true;
-        }
-    }
 
     $scope.logout = function() {
-        localStorage.removeItem('loggedID');
-        localStorage.removeItem('loggedName');
-        $scope.tttest();
-        $location.path("/welcome");
+        $http
+            .post(serverURL, {
+                operation: "logoutUser"
+            })
+            .success(function(res) {
+                // console.log('Результат логаута: ', res);// return;
+                if(res) {
+                    localStorage.removeItem('loggedID');
+                    localStorage.removeItem('loggedName');
+                    Users.userOnline();
+                    Nav.gotoWelcome($scope, $location);
+                }
+            });
     }
 
     $scope.goToWelcome = function() {
-        $location.path("/welcome");
+        Nav.gotoWelcome($scope, $location);
     }
 });

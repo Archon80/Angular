@@ -1,23 +1,32 @@
+<div>{{ getCurrentPost() }}</div>
+<!-- <div>{{ refreshAllComments() }}</div> -->
+
 <div class="wrap-show-post">
+
     <h2>{{ currentPost.title }}</h2>
 
     <div class="post-title">
-        <a href="#">{{ currentPost.name }}</a>  </div>
+        <a href="" ng-click="showUser(currentPost)">{{ currentPost.name }}</a>  </div>
     </div>
     <div show-post-content>
-        {{ currentPost.message }}</textarea>
+        {{ currentPost.message }}
     </div>
+    <br>
+    <div class="post-tags">{{ currentPost.tags }}</div>
 
     <br><hr><br>
 
     <h2>Комментарии</h2>
-    <div class="wrap-all-comments" ng-repeat="comment in allComments">
-        <div class="comment-author">  {{ comment.author }} ({{ comment.email }}) </div>
-        <div class="comment-message"> {{ comment.message }} </div>
-        <div class="wrap-one-comment-buttons" ng-if="compareUsersComments(currentPost)">
-            <button class="one-comment-buttons" ng-click="deleteComment(comment)">Удалить</button>
+    
+    <div ng-if="checkAllComments()">
+        <div class="wrap-all-comments" ng-repeat="comment in allComments">
+            <div class="comment-author">  {{ comment.author }} <span>( {{ comment.email }} )</span></div>
+            <div class="comment-message"> {{ comment.message }} </div>
+            <div class="wrap-one-comment-buttons" ng-if="compareUsersComments(currentPost)">
+                <button class="one-comment-buttons" ng-click="deleteComment(comment.id_comment, currentPost.id_post)">Удалить</button>
+            </div>
+            <br>
         </div>
-        <br>
     </div>
     
     <br><hr><br>
@@ -25,9 +34,10 @@
     <div class="wrap-new-comment">
         <h2>Добавить комментарий</h2>
         
-        <form name="commentForm" novalidate ng-submit="addComment(currentComment, commentForm.$valid)">
+        <form name="commentForm" novalidate ng-submit="addComment(currentComment, currentPost.id_post, commentForm.$valid)">
             <div class="well" ng-cloak>
                 <div class="form-group one-comment-field">
+                    Автор<br />
                     <input type="text" name="newCommentName" placeholder="Введите имя" class="form-control" ng-model="currentComment.author" required />
 
                     <div class="error" ng-show="showError">
@@ -36,6 +46,7 @@
                 </div>
                 <br>
                 <div class="form-group one-comment-field">
+                    Почта<br />
                     <input type="text" name="newCommentEmail" placeholder="Введите почту" class="form-control" ng-model="currentComment.email" required />
 
                     <div class="error" ng-show="showError">
@@ -44,7 +55,8 @@
                 </div>
                 <br>
                 <div class="form-group one-comment-field">
-                    <textarea name="newCommentMessage" cols="30" rows="10" ng-model="currentComment.message" required></textarea>
+                    Сообщение<br />
+                    <textarea name="newCommentMessage" cols="30" rows="10" placeholder="Введите сообщение" ng-model="currentComment.message" required></textarea>
 
                     <div class="error" ng-show="showError">
                         {{ getError(commentForm.newCommentMessage.$error) }}
@@ -80,5 +92,5 @@
 </div>
 
     <br><hr><br>
-    <button ng-click="goToMain()">Вернуться на главную</button>
+    <button ng-click="gotoMain()">Вернуться на главную</button>
 </div>

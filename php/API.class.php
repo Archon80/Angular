@@ -35,8 +35,10 @@ class API {
 			case "getAllComments": 	return Comments::getAllComments($params['data']);
 			case "getAllUserPosts": return Users::getAllUserPosts($params['data']);
 			case "getAllUsers": 	return Users::getAllUsers();
+			case "getPost": 		return Posts::getOnePost($params['data']);
 			case "IsUserExists": 	return true;
 			case "loginUser": 		return Users::loginUser($params['data']);
+			case "logoutUser": 		return Users::logoutUser();
 			case "signNewUser": 	return Users::signupNewUser($params['data']);
 			default: 				return "Unknown params";
 		}

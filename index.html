@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <title>REST</title>
     <link rel="stylesheet" href="css/main.css">
-    <script src="js/jquery.min.js"></script>
     <script src="js/angular.min.js"></script>
     <script src="js/angular-resource.min.js"></script>
     <script src="js/angular-route.min.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/routing.js"></script>
+    <script src="js/welcome.js"></script>
+    <script src="js/signup.js"></script>
+    <script src="js/login.js"></script>
     <!-- <base href="/app/"> -->
 <!--     <script>
         angular.element(document.getElementsByTagName('head')).append(angular.element('<base href="' + window.location.pathname + '" />'));
@@ -20,8 +23,8 @@
     <div class="ext-wrap" ng-controller="commentsCtrl">
         <div ng-controller="usersCtrl">
             <div class="test-menu"><a href="" ng-click="goToWelcome()">На страницу приветствия</a></div>
-            <div class="test-menu"><a href="" ng-click="goToMain()">На главную</a></div>
-            <div class="test-menu"><a href="">Сейчас на сайте: {{ tttest() }}</a></div>
+            <div class="test-menu"><a href="" ng-click="gotoMain()">На главную</a></div>
+            <div class="test-menu"><a href="">Сейчас на сайте: {{ userOnline() }}</a></div>
             <div class="test-menu"><a href="" ng-click="logout()">Выход</a></div>
             <div ng-view></div>
         </div>

@@ -110,5 +110,6 @@ span.summary.if-valid {
     padding-bottom: 10px;
 }
 
-
-
+.post-tags {
+    font: italic 16px Verdana;
+}
