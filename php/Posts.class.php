@@ -22,17 +22,9 @@ class Posts {
 
 		$res = $query->fetchAll();
 
-
-		// обрезаем статьи, т.к. выводим лишь привью
-		$l = count($res);
-		for ($i=0; $i < $l; $i++) { 
-			if( mb_strlen($res[$i]['message'], 'UTF-8') > 100 ) {
-				$res[$i]['message'] = substr($res[$i]['message'], 0, 99) . '...';
-			}
-		}
-
 		$temp = [];
-		for ($i=0, $j = count($res) - 1; $i < count($res); $i++,$j--) { 
+		$l = count($res);
+		for ($i=0, $j = $l - 1; $i < $l; $i++,$j--) { 
 			$temp[$j] = $res[$i];
 		}
 		return $temp;

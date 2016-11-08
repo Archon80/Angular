@@ -10,6 +10,7 @@ trait DB_connect {
 
 		$options = [
 			PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+		    // PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 		    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
 		];
 
@@ -24,7 +25,15 @@ trait DB_connect {
 	{
 		switch ($type)
 		{
-			case 's':	return trim(htmlspecialchars(strip_tags($data)));	// если тип переменной - строка (по умолчанию)
+			case 's':
+				$data = trim($data);
+				$data = strip_tags($data);
+				$data = htmlspecialchars($data);
+				$data = preg_replace('/\s+/', ' ',  $data);
+				if (get_magic_quotes_gpc()) {
+             		$data = stripslashes($data);
+				}
+				return $data;	// если тип переменной - строка (по умолчанию)
 			case 'i':	return abs( (int) $data);							// если тип переменной - целое число
 		}
 	}

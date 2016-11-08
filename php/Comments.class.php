@@ -6,7 +6,6 @@ class Comments {
 	// получение всех комментариев
 	public static function getAllComments($id)
 	{
-		// self::showDev($arrPost); exit();
 		$answer = [
 			"status" => "",
 			"data"   => ""
@@ -55,12 +54,11 @@ class Comments {
 	// добавление комментария
 	public static function addComment($arrComment)
 	{
-		// self::showDev($arrPost); exit();
+		// self::showDev($arrComment); exit();
 		$answer = [
 			"status" => "",
 			"data"   => ""
 		];
-		// self::showDev($arrUser);exit;
 
 		try {
 			// проверяем входной параметр
@@ -75,18 +73,18 @@ class Comments {
 			// проверяем идентификатор пользователя
 			if( !isset($arrComment['id_post']) || strlen($arrComment['id_post']) < 1 ) {
 				$answer["status"] = "no_id_post";
-				throw new PDOException("В функции addComment в массиве arrPost отсутствует поле 'id_user'.");
+				throw new PDOException('В функции addComment в массиве arrComment отсутствует поле id_user.');
 			}
 
 			if( getType($arrComment['id_post']) !== 'string' ) {
 				$answer["status"] = "no_string_type_of_id_post";
-				throw new PDOException("В функцию addComment по ключу id_post пришла не строка.");
+				throw new PDOException('В функцию addComment по ключу id_post пришла не строка.');
 			}
 
 			// проверяем имя автора комментария
 			if(!isset($arrComment['comment']['author'])) {
 				$answer["status"] = "no_author";
-				throw new PDOException("Необходимо заполнить поле 'Автор'.");
+				throw new PDOException('Необходимо заполнить поле \'Автор\'.');
 			}
 			if( strlen($arrComment['comment']['author']) < 2 ) {
 				$answer["status"] = "too_short_author";
