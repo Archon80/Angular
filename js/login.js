@@ -41,7 +41,7 @@ app.controller("loginCtrl", function($scope, $http, serverURL, $location, Tools)
                 data: newUser
             })
             .success(function(res) {
-                // console.log("Результат авторизации: ", res["data"]); return;
+                // console.log("Результат авторизации: ", res); return;
 
                 // проверка входного параметра с сервера
                 if(typeof res !== 'object') {

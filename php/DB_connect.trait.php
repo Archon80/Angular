@@ -46,29 +46,27 @@ trait DB_connect {
 		echo '</pre>';
 	}
 
-	public static function isAuth()
+	public static function isAuth($id_user)
 	{
 		$db = self::db_connect();
 					
-		$q = "SELECT `current` FROM auth WHERE id > 0";
+		$q = "SELECT * FROM auth WHERE `current`=$id_user";
 		$query = $db->prepare($q);
 		$query->execute();
 		$res = $query->fetchAll();
+		// self::showDev($res); exit();
 
 		return (count($res)) ? true : false;
 	}
 
-	public static function logoutUser()
+	public static function logoutUser($id_user)
 	{
+		// self::showDev($id_user); exit();
 		$db = self::db_connect();
 					
-		$q = "DELETE FROM auth";
+		$q = "DELETE FROM auth WHERE `current`=$id_user";
 		$query = $db->prepare($q);
 		
 		return $query->execute();
 	}
 }
-
-
-
-

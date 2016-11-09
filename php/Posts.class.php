@@ -93,11 +93,6 @@ class Posts {
 				$answer["status"] = "not_array";
 				throw new PDOException('В функцию addPost в качестве параметра arrPost пришел не массив.');
 			}
-			// проверка прав на бекенде
-			if(!self::isAuth()) {
-				$answer["status"] = "not_auth";
-				throw new PDOException('Неавторизированный пользователь не может добавлять комментарии');
-			}
 			// проверяем заголовок поста
 			if(!isset($arrPost['post']['title'])) {
 				$answer["status"] = "no_title";
@@ -146,6 +141,12 @@ class Posts {
 				throw new PDOException("В функции addPost в массиве arrPost отсутствует поле 'id_user'.");
 			}
 
+			// !!! ПРОВЕРКА ПРАВ НА БЕКЕНДЕ !!!
+			if(!self::isAuth($arrPost['id_user'])) {
+				$answer["status"] = "not_auth";
+				throw new PDOException('Неавторизированный пользователь не может добавлять комментарии');
+			}
+
 			// обрабатываем полученые переменные
 			$title 	 = self::clear_data($arrPost['post']['title'],  's');
 			$message = self::clear_data($arrPost['post']['message'],'s');
@@ -181,33 +182,41 @@ class Posts {
 
 
 	// редактируем пост
-	public static function editPost($arrPost)
+	public static function editPost($arr)
 	{
-		// self::showDev($arrPost); exit();
+		// self::showDev($arr); exit();
 		$answer = [
 			"status" => "",
 			"data"   => ""
 		];
-
 		try {
 			// проверяем входной параметр
-			if(!isset($arrPost)) {
+			if(!isset($arr)) {
 				$answer["status"] = "no_data";
-				throw new PDOException('В функцию editPost не пришел параметр arrPost.');
+				throw new PDOException('В функцию editPost не пришли никакие данные.');
 			}
-			if( getType($arrPost) !== 'array') {
+			if( getType($arr) !== 'array') {
 				$answer["status"] = "not_array";
-				throw new PDOException('В функцию editPost в качестве параметра arrPost пришел не массив.');
+				throw new PDOException('В функцию editPost пришел не массив.');
 			}
-			// проверка прав на бекенде
-			if(!self::isAuth()) {
+			if( !isset($arr['id_user']) ) {
+				$answer["status"] = "not_array";
+				throw new PDOException('В функцию editPost не пришел айдишник пользователя.');
+			}
+			
+			// !!! ПРОВЕРКА ПРАВ НА БЕКЕНДЕ !!!
+			if(!self::isAuth($arr['id_user'])) {
 				$answer["status"] = "not_auth";
-				throw new PDOException('Неавторизированный пользователь не может редактировать комментарии');
+				throw new PDOException('Неавторизированный пользователь не может добавлять комментарии');
 			}
+
+			
+			// self::showDev($arrPost); exit();
+			$arrPost = $arr['post'];
 			// проверяем идентификатор поста
 			if(!isset($arrPost['id_post'])) {
 				$answer["status"] = "no_id_post";
-				throw new PDOException("В функции editPost в массиве arrPost отсутствует поле 'id_post'.");
+				throw new PDOException("В функции editPost в массиве arr отсутствует поле 'id_post'.");
 			}
 			// проверяем заголовок поста
 			if(!isset($arrPost['title'])) {
@@ -235,7 +244,6 @@ class Posts {
 				$answer["status"] = "too_long_message";
 				throw new PDOException("Слишком длинное сообщение. Длина сообщения не должна превышать 1000 символов");
 			}
-			
 			// проверяем теги
 			if(!isset($arrPost['tags'])) {
 				$arrPost['tags'] = '';
@@ -290,32 +298,39 @@ class Posts {
 	} // editPost
 
 	// удаление поста
-	public static function deletePost($id_post)
+	public static function deletePost($arr)
 	{
-		// self::showDev($id); exit();
+		// self::showDev($arr); exit();
 		$answer = [
 			"status" => "",
 			"data"   => ""
 		];
 
 		try {
-			if(!isset($id_post)) {
-				$answer["status"] = "no_id_post";
-				throw new PDOException('В функцию deletePost не пришел параметр id_post.');
+			if(!isset($arr['id_user'])) {
+				$answer["status"] = "no_id_user";
+				throw new PDOException('В функцию deletePost не пришел параметр id_user.');
 			}
 			// проверка прав на бекенде
-			if(!self::isAuth()) {
+			if(!self::isAuth($arr['id_user'])) {
 				$answer["status"] = "not_auth";
 				throw new PDOException('Неавторизированный пользователь не может удалять комментарии');
 			}
 
-			$id_post = self::clear_data($id_post, 'i');
+			if(!isset($arr['post']['id_post'])) {
+				$answer["status"] = "no_id_post";
+				throw new PDOException('В функцию deletePost не пришел параметр id_post.');
+			}
+
+			$id_post = self::clear_data($arr['post']['id_post'], 'i');
 
 			$db = self::db_connect();
 			if(!$db) {
 				$answer["status"] = "no_database_connect";
 				throw new PDOException("Не удалось подключение к БД.");
 			}
+			// self::showDev($id_post); exit();
+
 		
 			$q = "DELETE FROM posts WHERE id_post=$id_post";
 			$query = $db->prepare($q);

@@ -155,26 +155,30 @@ class Comments {
 	} // addComment
 
 	// удаление комментария
-	public static function deleteComment($id_comment)
+	public static function deleteComment($arr)
 	{
-		// self::showDev($id); exit();
+		// self::showDev($arr); exit();
 		$answer = [
 			"status" => "",
 			"data"   => ""
 		];
 
 		try {
-			if(!isset($id_comment)) {
+			if(!isset($arr['id_comment'])) {
 				$answer["status"] = "no_id_comment";
 				throw new PDOException('В функцию deleteComment не пришел параметр id_comment.');
 			}
+			if(!isset($arr['id_user'])) {
+				$answer["status"] = "no_id_comment";
+				throw new PDOException('В функцию deleteComment не пришел параметр id_user.');
+			}
 			// проверка прав на бекенде
-			if(!self::isAuth()) {
+			if(!self::isAuth($arr['id_user'])) {
 				$answer["status"] = "not_auth";
 				throw new PDOException('Неавторизированный пользователь не может удалять комментарии');
 			}
 
-			$id_comment = self::clear_data($id_comment, 'i');
+			$id_comment = self::clear_data($arr['id_comment'], 'i');
 
 			$db = self::db_connect();
 			if(!$db) {

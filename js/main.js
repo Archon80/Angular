@@ -7,6 +7,7 @@ app.constant("serverURL", "./php/server.php");
 // всп. методы
 app.factory("Tools", function() {
     return {
+
         clearComment: function(commentForm, currentComment) {
             commentForm.newCommentName.value = '';
             commentForm.newCommentEmail.value = '';
@@ -440,9 +441,13 @@ app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Too
         $http
             .post(serverURL, {
                 operation: "editPost",
-                data: post
+                data: {
+                    post: post,
+                    id_user: Users.getCurrentUserData("id")
+                }
             })
             .success(function(res) {
+                console.log(res);// return;
                 if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
 
                 if(res["status"] == 'ok') {
@@ -459,6 +464,7 @@ app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Too
                         Tools.techErrorAlert();
                         console.log(res["data"]);
                     }
+                    // !!! ИНДИВИДУАЛЬНАЯ ПРОВЕРКА ПРАВ
                     else if(res["status"] === 'not_auth') {
                         alert(res["data"]);
                     }
@@ -506,6 +512,8 @@ app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Too
 
     // удаление поста
     $scope.deletePost = function(post) {
+        console.log();
+
         if(typeof post !== 'object') {
             Tools.techErrorAlert();
             console.log('Удаление поста. Из формы от пользователя пришел не объект.');
@@ -520,12 +528,20 @@ app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Too
         $http
             .post(serverURL, {
                 operation: "deletePost",
-                data: post.id_post
+                data: {
+                    post: post,
+                    id_user: Users.getCurrentUserData("id")
+                }
             })
             .success(function(res) {
-                console.log("Ответ сервера при удалении поста: ", res);
+                console.log("Ответ сервера при удалении поста: ", res);// return;
 
-                if( !Check.dataFromServer(res, Tools) ) { return; };
+                if( !Check.dataFromServer(res, Tools) ) {
+                    return;
+                }
+                else if(res["status"] === 'not_auth') {
+                    alert(res["data"]);
+                }
 
                 if(res["status"] == 'ok') {
                     $scope.showAllPosts();
@@ -611,7 +627,7 @@ app.controller("baseBlogCtrl", function($scope, $http, $location, serverURL, Too
 /*
     работа с комментариями
 */
-app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, serverURL, Tools, Check, Nav) {
+app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, serverURL, Tools, Users, Check, Nav) {
     
     $scope.getError = Tools.getError;
 
@@ -758,9 +774,14 @@ app.controller("commentsCtrl", function($scope, $http, $routeParams, $location, 
         $http
             .post(serverURL, {
                 operation: "deleteComment",
-                data: id_comment
+                data: {
+                    id_comment: id_comment,
+                    id_user: Users.getCurrentUserData("id")
+                }
             })
             .success(function(res) {
+                console.log("Ответ сервера при удалении комментария: ", res);// return;
+
                 if( !Check.dataFromServer(res, Tools) ) { return; };   // проверка входного параметра с сервера
 
                 if(res["status"] == 'ok') {
@@ -824,10 +845,11 @@ app.controller("usersCtrl", function($scope, $http, $location, serverURL, Tools,
     $scope.logout = function() {
         $http
             .post(serverURL, {
-                operation: "logoutUser"
+                operation: "logoutUser",
+                data: localStorage.getItem('loggedID')
             })
             .success(function(res) {
-                // console.log('Результат логаута: ', res);// return;
+                console.log('Результат логаута: ', res);// return;
                 if(res) {
                     localStorage.removeItem('loggedID');
                     localStorage.removeItem('loggedName');

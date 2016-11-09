@@ -209,9 +209,12 @@ class Users {
 
 			$res = $query->fetchAll();
 
+			// self::showDev($res[0]["id_user"]); exit();
+			$id_login = $res[0]['id_user'];
+
+
 			if(count($res)) {
-				// Добавить сюда авторизацию
-				$r = "INSERT INTO auth(`current`) VALUES (\"yes\")";
+				$r = "INSERT INTO auth(`current`) VALUES ($id_login)";
 				$query = $db->prepare($r);
 
 				if($query->execute()) {

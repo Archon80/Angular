@@ -38,7 +38,7 @@ class API {
 			case "getPost": 		return Posts::getOnePost($params['data']);
 			case "IsUserExists": 	return true;
 			case "loginUser": 		return Users::loginUser($params['data']);
-			case "logoutUser": 		return Users::logoutUser();
+			case "logoutUser": 		return Users::logoutUser($params['data']);
 			case "signNewUser": 	return Users::signupNewUser($params['data']);
 			default: 				return "Unknown params";
 		}
