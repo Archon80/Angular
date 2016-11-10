@@ -1,7 +1,13 @@
 // var globalPath = "/app/";
 var globalPath = "";
 // роутинг приложения
-app.config(function($routeProvider) {
+app.config(function($routeProvider, $locationProvider) {
+    $locationProvider.html5Mode(true);
+
+    /*$locationProvaider.html5Mode({
+        enabled: true,
+        requreBase: false
+    });*/
     $routeProvider
         .when("/welcome", {
             templateUrl: "view/welcome.html"
